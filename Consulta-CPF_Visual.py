@@ -13,7 +13,7 @@ def consultar():
     cpf = entrada_cpf.get()
     url = f'https://api.cpfhub.io/cpf/{cpf}'
     headers = {
-        'x-api-key': '8511d07fd288539bf2d9698900818bbcb1a1a9eb3343662eccbfeb0152a6d66b',
+        'x-api-key': 'digite sua api aqui',
         'Accept': 'application/json'
     }
 
