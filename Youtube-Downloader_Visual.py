@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from pytubefix import YouTube
-from pytubefix.cli import on_progress
+import threading
 
 # configurações visuais
 ctk.set_appearance_mode('dark')
@@ -25,22 +25,43 @@ def progresso(stream, chunk, bytes_remaining):
     janela.update_idletasks() # força a interface a atualizar
 
 
+#função para fazer o download rodar em segundo plano
+def thread_download(url):
+    try:
+        yt = YouTube(url, on_progress_callback=progresso) # essa variavel abre toda a biblioteca e atrela todas as configurações de um video dentro do video desse link
+        stream = yt.streams.get_highest_resolution() # melhor qualidade
+
+        # mostra a barra e o status agora que começou
+        barra_progresso.pack(pady=20)
+        status.pack(pady=20)
+        status.configure(text='Iniciando download...',
+                     text_color='white')
+
+        stream.download()
+        status.configure(text='Download concluído!',
+                         text_color='green')
+    except Exception as e:
+        status.configure(text=f'Erro: {e}',
+                         text_color='red')
 
 # função para baixar
 def baixar():
     # captura o link digitado dentro do input
     url = link.get()
-    # essa variavel abre toda a biblioteca e atrela todas as configurações de um video dentro do video desse link
-    yt = YouTube(url, 
-                 on_progress_callback=on_progress)
-    # barra de progresso
-    barra_progresso.set(0) #reseta a barra antes de baixa   r
-    status.configure(text='Iniciando download...')
+    
+    if not url:
+        status.pack(pady=20)
+        status.configure(text='Cole um link válido!',
+                         text_color='orange')
+        return
+    
+    # reset da interface
+    barra_progresso.pack_forget() # esconde a barra até que o download seja iniciado
+    status.pack_forget()
 
-    # baixar resolução padrão
-    yt.streams.first().download()
-    barra_progresso.set(1) #garante 100% ao finalizar
-    status.configure(text='Download concluído')
+    barra_progresso.set(0) #mantem a barra zerada até que o download comece
+    
+    threading.Thread(target=thread_download, args=(url,), daemon=True).start() # inicia um fluxo de download sem travar a tela
 
 
 
@@ -74,13 +95,13 @@ donwload.pack(pady=20)
 barra_progresso = ctk.CTkProgressBar(janela,
                                      orientation='horizontal')
 barra_progresso.set(0)
-barra_progresso.pack(pady=20)
+# barra_progresso.pack(pady=20)
 
 # status do download
 status = ctk.CTkLabel(janela, 
                       text='',
                       font=('Arial', 15))
-status.pack(pady=20)
+# status.pack(pady=20)
 
 
 # para gerar a janela
